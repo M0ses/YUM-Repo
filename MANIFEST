@@ -1,0 +1,15 @@
+Build.PL
+Changes
+lib/YUM/Repo.pm
+lib/YUM/Repo/Base.pm
+lib/YUM/Repo/filelists.pm
+lib/YUM/Repo/other.pm
+lib/YUM/Repo/primary.pm
+lib/YUM/Repo/RPM.pm
+lib/YUM/RepomdXml.pm
+MANIFEST			This list of files
+README
+t/00-load.t
+t/manifest.t
+t/pod-coverage.t
+t/pod.t
