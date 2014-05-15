@@ -10,11 +10,14 @@ my $builder = Module::Build->new(
     dist_version_from   => 'lib/YUM/Repo.pm',
     build_requires => {
         'Test::More' => 0,
-	'MooX::Types::MooseLike' => 0,
     },
     requires => {
         'perl' => 5.006,
-	'MooX::Types::MooseLike' => 0,
+	    'MooX::Types::MooseLike' => 0,
+        'XML::LibXML::Simple'=> 0,
+        'LWP::UserAgent' => 0,
+        'Config::General'=>0,
+        'Path::Class'=>0,
     },
     add_to_cleanup      => [ 'YUM-Repo-*' ],
     create_makefile_pl => 'traditional',
