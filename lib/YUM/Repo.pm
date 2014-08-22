@@ -136,7 +136,7 @@ sub sync_to {
 	foreach my $file (@filelist) {
 		my $rpm_lpath 	= file($sync_to_dir,$file);
 		my $uri = URI->new_abs($file,$self->uri);	
-		print "$uri -> $rpm_lpath\n";
+
 		is_error(mirror($uri,$rpm_lpath)) &&
 			die "Error while syncing <$uri> to <$rpm_lpath>\n";
 	}	

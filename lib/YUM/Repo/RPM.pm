@@ -89,6 +89,7 @@ sub obsoletes	{ my $s = shift; return $s->__base_deps('obsoletes',@_);}
 sub suggests	{ my $s = shift; return $s->__base_deps('suggests',@_);}	
 sub recommends	{ my $s = shift; return $s->__base_deps('recommends',@_);}	
 sub conflicts	{ my $s = shift; return $s->__base_deps('conflicts',@_);}	
+sub supplements { my $s = shift; return $s->__base_deps('supplements',@_);}	
 
 sub provides {
 	my $self = shift;
