@@ -25,7 +25,7 @@ YUM::Repo - Read, search and sync YUM Repositories
 
 =cut
 
-our $VERSION = '0.000101';
+our $VERSION = '0.000201';
 
 =head1 METHODS/ACCESSORS
 
@@ -68,7 +68,7 @@ sub repomd_xml {
 	map { $self->$_($self->repomd->$_) } qw/primary filelists other/;
 
 	return $self->repomd;
-}	
+}
 
 =head2 who_provides
 
@@ -86,7 +86,7 @@ sub who_provides {
         map { push(@result,$_->{pkgName}) }  @{$self->{provides}->{$query}};
 
 	return \@result;
-}	
+}
 
 
 =head2 add_to_provides
@@ -128,21 +128,111 @@ sub sync_to {
 		push(@filelist,$file);
 		my $dir = dir($sync_to_dir,dirname($file));
 		$unique_path->{$dir}=1;
-		
-	}	
+
+	}
 
 	map { -d $_ || make_path($_) } ($sync_to_dir,(keys(%{$unique_path})));
 
 	foreach my $file (@filelist) {
 		my $rpm_lpath 	= file($sync_to_dir,$file);
-		my $uri = URI->new_abs($file,$self->uri);	
+		my $uri = URI->new_abs($file,$self->uri);
+        my $rc = mirror($uri,$rpm_lpath);
 
-		is_error(mirror($uri,$rpm_lpath)) &&
-			die "Error while syncing <$uri> to <$rpm_lpath>\n";
-	}	
+        # fix missing key in repo
+        # e.g. dell omsa repo
+        if ( $uri =~ m#repodata/repomd.xml.key# ) {
+            next if ( $rc == 404 );
+        }
 
-	return 1;	
-	
-}	
+		is_error($rc) &&
+			die "Error while syncing <$uri> to <$rpm_lpath>\nReturn Code: $rc\n";
+	}
 
-return 1;
+	return 1;
+
+}
+
+=head2 sync_filtered - sync filtered files from a remote repository 
+
+=head3 Arguments:
+
+=over 1
+
+=item destination - local path to store files
+
+
+=item filter - code ref for filter function
+
+
+=item skip_repodata - to not syncronize repodata directory
+
+=back
+
+filter function will be called with two Arguments
+
+=over 2
+
+=item 1. Argument rpm - is a YUM::Repo::RPM object containing the actual rpm to apply filters to
+
+=item 2. Argument opts - all options to sync_filtered in a HashRef
+
+=back 
+
+=cut
+
+sub sync_filtered {
+	my $self        = shift;
+    my %opts_       = @_;
+    my $sync_to_dir = $opts_{destination};
+    my $filter = $opts_{filter};
+    my $opts = \%opts_;
+
+	my $unique_path = {};
+	my @filelist = ();
+
+    my @filtered_packages=();
+    my @filtered_hrefs=();
+    my $repodata_files = ($opts_{skip_repodata}) ? [] : [@{$self->files},@{$self->repomd->files}];
+    foreach my $rpm ( @{$self->primary->open_xml->package_list} ) {
+        if ( ref($filter) eq 'CODE' && ! $filter->($rpm,$opts) ) {
+            next;
+        }
+        push(@filtered_packages,$rpm);
+        push(@filtered_hrefs,$rpm->href);
+    }
+
+
+	foreach my $file (
+		@{$repodata_files},
+        @filtered_hrefs
+	)
+	{
+		push(@filelist,$file);
+		my $dir = dir($sync_to_dir,dirname($file));
+		$unique_path->{$dir}=1;
+	}
+
+	map { -d $_ || make_path($_) } ($sync_to_dir,(keys(%{$unique_path})));
+
+	foreach my $file (@filelist) {
+		my $rpm_lpath 	= file($sync_to_dir,$file);
+		my $uri = URI->new_abs($file,$self->uri);
+        my $rc = mirror($uri,$rpm_lpath);
+
+        # fix missing key in repo
+        # e.g. dell omsa repo
+        if ( $uri =~ m#repodata/repomd.xml.key# ) {
+            next if ( $rc == 404 );
+        }
+
+		is_error($rc) &&
+			die "Error while syncing <$uri> to <$rpm_lpath>\nReturn Code: $rc\n";
+	}
+
+	return {
+                packages=> \@filtered_packages
+    };
+
+}
+
+1;

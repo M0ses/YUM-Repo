@@ -9,7 +9,7 @@ use strict;
 use warnings;
 use Getopt::Long;
 
-my ($repo_url, $destination);
+my ($repo_url, $destination)=("http://linux.dell.com/repo/hardware/latest/platform_independent/suse11_64/",'');
 my $result = GetOptions ("repo_url=s" => \$repo_url, # numeric
 		"destination=s" => \$destination, # string
 		); # flag
@@ -18,7 +18,7 @@ if(!$repo_url || !$destination){
 	print "Usage:\n";
 	print "\n";
 	print $0.' --repo=<repo url> --dest=<target path>'."\n";
-	print 'repo url: http://obs.isarnet.lab:82/4.8.1:/IsarNet:/Perl/SLE_11_SP2/'."\n";
+	print "repo url: $repo_url\n";
 	print "\n";
 	exit 1;
 }
@@ -36,8 +36,25 @@ my $yum = YUM::Repo->new(uri=>$REPO_URL);
 my $repomd_xml = $yum->repomd_xml();
 #$yum->other->open_xml;
 #print Dumper($yum->repomd_xml->files);
-#print Dumper($yum->primary->open_xml->files);
+#
+my @package_list=$yum->primary->open_xml->package_list;
+#print Dumper($yum->primary->open_xml->package_list);
 
-$yum->sync_to($destination);
+$yum->sync_filtered(
+    destination             =>    $destination,
+    include_package_list    => ['srvadmin-all'],
+    skip_repodata           => 1,
+    filter                  =>
+    sub {
+        my ($rpm,$opts) = @_;
+        if ( 
+            $rpm->{name} ~~ @{$opts->{include_package_list}} &&
+            $rpm->{type} eq 'rpm'
+        ) {
+            return 1
+        }
+        return 0
+    }
+);
 
 exit 0;

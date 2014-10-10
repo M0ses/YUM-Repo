@@ -41,14 +41,18 @@ has sourcerpm => ( is => 'rw' , isa => Str);
 has RepoObject => ( is => 'rw' , isa => Object );
 has header_range => ( is => 'rw' , isa => HashRef, default => sub {return{}} );
 
+has href => ( is => 'rw', isa => Str);
+
 sub data_from_struct {
 	my $self = shift;
 	my $struct = shift;
 
 	foreach my $attr (qw/name arch description summary url type/) {
 		my $content = (ref($struct->{$attr})) ? '' : $struct->{$attr};
-		$self->$attr($content);
+		$self->$attr($content || '');
 	}
+
+    $self->href($struct->{location}->{href});
 
 	foreach my $key (keys(%{$struct->{format}})) {
 		my $attr=$key;
@@ -63,7 +67,7 @@ sub data_from_struct {
 			# it leads to a hashRef (evtl. given by XML Parser Implementation)
 			# This hashRef breaks our attribute definition
 			my $tmpAttr='';
-			if ($attr eq 'sourcerpm' && ref($struct->{format}->{$key}) eq 'HASH') {
+			if (($attr eq 'sourcerpm' || $attr eq 'vendor')  && ref($struct->{format}->{$key}) eq 'HASH') {
 				if (keys(%{$struct->{format}->{$key}}) > 0) {
 					warn 				
 						"attr: $attr key:$key\n" .
