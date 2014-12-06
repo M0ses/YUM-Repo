@@ -221,7 +221,7 @@ sub sync_filtered {
 
         # fix missing key in repo
         # e.g. dell omsa repo
-        if ( $uri =~ m#repodata/repomd.xml.key# ) {
+        if ( $uri =~ m#repodata/repomd.xml.(key|asc)$# ) {
             next if ( $rc == 404 );
         }
 
