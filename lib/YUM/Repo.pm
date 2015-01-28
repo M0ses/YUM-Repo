@@ -25,7 +25,7 @@ YUM::Repo - Read, search and sync YUM Repositories
 
 =cut
 
-our $VERSION = '0.000201';
+our $VERSION = '0.000202';
 
 =head1 METHODS/ACCESSORS
 
