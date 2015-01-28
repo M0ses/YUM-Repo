@@ -25,7 +25,7 @@ YUM::Repo - Read, search and sync YUM Repositories
 
 =cut
 
-our $VERSION = '0.000202';
+our $VERSION = '0.000203';
 
 =head1 METHODS/ACCESSORS
 
@@ -140,7 +140,7 @@ sub sync_to {
 
         # fix missing key in repo
         # e.g. dell omsa repo
-        if ( $uri =~ m#repodata/repomd.xml.key# ) {
+        if ( $uri =~ m#repodata/repomd.xml.(key|asc)$# ) {
             next if ( $rc == 404 );
         }
 
